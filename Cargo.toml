@@ -1,0 +1,8 @@
+[package]
+name = "verinox"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+thiserror = "2.0.20"
+toml = "1.1.4"

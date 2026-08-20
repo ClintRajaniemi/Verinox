@@ -4,4 +4,4 @@ hash_algorithm = "Sha256"
 # Log directory
 log_dir = "C:/ProgramData/Verinox/logs"
 # watch_patterns are the directories to monitor for file changes.
-watch_pattersn = [""]
+watch_patterns = ["C:\\Windows\\System32\\drivers\\etc\\hosts", "C:\\Windows\\System32\\Tasks\\**", "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\\**", "C:\\Users\\*\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\**", "C:\\Windows\\win.ini", "C:\\Windows\\system.ini"]

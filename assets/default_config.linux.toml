@@ -3,3 +3,5 @@
 hash_algorithm = "Sha256"
 # Log Directory
 log_dir = "/var/log/verinox"
+# watch_patterns are the directories to monitor for file changes.
+watch_patterns = ["/etc/passwd", "/etc/shadow", "/etc/sudoers", "/etc/sudoers.d/**", "/etc/hosts", "/etc/ssh/sshd_config", "/etc/crontab", "/etc/cron.d/**", "/etc/systemd/system/**", "/etc/ld.so.preload"]

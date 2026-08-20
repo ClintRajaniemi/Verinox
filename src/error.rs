@@ -1,5 +1,5 @@
-use crate::config::ConfigError;
 use crate::baseline::BaselineError;
+use crate::config::ConfigError;
 use crate::watcher::WatcherError;
 
 #[derive(thiserror::Error, Debug)]

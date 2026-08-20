@@ -1,5 +1,6 @@
 use blake3;
 use const_hex;
+use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
 use std::path::PathBuf;
@@ -19,7 +20,7 @@ pub enum ConfigError {
     InvalidWatchPath(PathBuf),
 }
 
-#[derive(serde::Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum HashAlgorithm {
     Sha256,
@@ -34,6 +35,28 @@ impl HashAlgorithm {
             HashAlgorithm::Blake3 => blake3::hash(bytes).to_string(),
         }
     }
+}
+
+#[cfg(target_os = "windows")]
+fn default_log_dir() -> PathBuf {
+    PathBuf::from(r"C:\ProgramData\Verinox\logs")
+}
+#[cfg(target_os = "linux")]
+fn default_log_dir() -> PathBuf {
+    PathBuf::from("/var/log/verinox")
+}
+#[cfg(target_os = "macos")]
+fn default_log_dir() -> PathBuf {
+    PathBuf::from("/Library/Logs/Verinox")
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Config {
+    watch_patterns: Vec<String>,
+    hash_algorith: HashAlgorithm,
+    #[serde(default = "default_log_dir")]
+    log_dir: PathBuf,
+    max_log_size: bytesize::ByteSize,
 }
 
 #[cfg(test)]

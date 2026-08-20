@@ -1,0 +1,7 @@
+[config]
+# Hashing algorithm to use when hashing files.
+hash_algorithm = "Sha256"
+# Log directory
+log_dir = "C:/ProgramData/Verinox/logs"
+# watch_patterns are the directories to monitor for file changes.
+watch_pattersn = [""]

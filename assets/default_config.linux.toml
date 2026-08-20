@@ -1,0 +1,5 @@
+[config]
+# Hashing algorithm to use when hashing files.
+hash_algorithm = "Sha256"
+# Log Directory
+log_dir = "/var/log/verinox"

@@ -50,6 +50,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bytesize"
+version = "2.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7354288c522e7e980fafd2075d63d1285794c3a6a16cdd492f189ea406e5f18b"
+dependencies = [
+ "serde_core",
+]
+
+[[package]]
 name = "cc"
 version = "1.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -449,6 +458,7 @@ name = "verinox"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "bytesize",
  "const-hex",
  "glob",
  "serde",

@@ -1,7 +1,15 @@
-[config]
 # Hashing algorithm to use when hashing files.
-hash_algorithm = "Sha256"
+hash_algorithm = "sha256"
 # Log directory
 log_dir = "/Library/Logs/Verinox"
+# Maximum size of a single log file before it breaks off into a new file.
+max_log_size = "10MB"
 # watch_patterns are the directories to monitor for file changes.
-watch_patterns = ["/etc/hosts", "/etc/passwd", "/etc/sudoers", "/etc/ssh/sshd_config", "/Library/LaunchAgents/**", "/Library/LaunchDaemons/**"]
+watch_patterns = [
+    '/etc/hosts', 
+    '/etc/passwd', 
+    '/etc/sudoers', 
+    '/etc/ssh/sshd_config', 
+    '/Library/LaunchAgents/**', 
+    '/Library/LaunchDaemons/**'
+    ]

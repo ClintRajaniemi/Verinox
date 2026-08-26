@@ -1,6 +1,5 @@
-
 #[cfg(test)]
-pub use verinox::{Watcher, WatchEvent, ChangeKind};
+pub use verinox::{ChangeKind, WatchEvent, Watcher};
 
 #[test]
 fn watcher_detects_file_creation() {
@@ -10,7 +9,9 @@ fn watcher_detects_file_creation() {
 
     std::fs::write(dir.path().join("test.txt"), b"hello").unwrap();
 
-    let event = watcher.events.recv_timeout(std::time::Duration::from_secs(2)).unwrap();
+    let event = watcher
+        .events
+        .recv_timeout(std::time::Duration::from_secs(2))
+        .unwrap();
     assert_eq!(event.kind, ChangeKind::Created);
 }
-

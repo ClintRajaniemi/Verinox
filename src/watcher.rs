@@ -127,7 +127,8 @@ mod test {
     #[test]
     fn translate_event_filters_non_matching_paths() {
         let patterns = vec![glob::Pattern::new("/etc/passwd").unwrap()];
-        let event = notify::Event::new(notify::EventKind::Modify(notify::event::ModifyKind::Any)).add_path(PathBuf::from("/etc/shadow"));
+        let event = notify::Event::new(notify::EventKind::Modify(notify::event::ModifyKind::Any))
+            .add_path(PathBuf::from("/etc/shadow"));
         assert!(translate_event(&event, &patterns).is_empty());
     }
 }

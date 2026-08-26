@@ -96,6 +96,22 @@ impl Config {
 
         Ok(config)
     }
+
+    pub fn watch_patterns(&self) -> &[String] {
+        &self.watch_patterns
+    }
+
+    pub fn hash_algorithm(&self) -> HashAlgorithm {
+        self.hash_algorithm
+    }
+
+    pub fn log_dir(&self) -> &Path {
+        &self.log_dir
+    }
+
+    pub fn max_log_size(&self) -> bytesize::ByteSize {
+        self.max_log_size
+    }
 }
 
 #[cfg(target_os = "windows")]

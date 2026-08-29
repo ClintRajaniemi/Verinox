@@ -17,3 +17,5 @@ watch_patterns = [
     '/etc/systemd/system/**', 
     '/etc/ld.so.preload'
     ]
+# File used to track the last known hash of each watched file, so changes can be detected across restarts.
+baseline_path = "/var/lib/verinox/baseline.json"

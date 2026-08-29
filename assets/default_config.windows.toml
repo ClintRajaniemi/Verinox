@@ -13,3 +13,5 @@ watch_patterns = [
     'C:\Windows\win.ini', 
     'C:\Windows\system.ini'
     ]
+# File used to track the last known hash of each watched file, so changes can be detected across restarts.
+baseline_path = 'C:\ProgramData\Verinox\baseline.json'

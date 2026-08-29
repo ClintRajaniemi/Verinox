@@ -60,6 +60,19 @@ fn default_log_dir() -> PathBuf {
     PathBuf::from("/Library/Logs/Verinox")
 }
 
+#[cfg(target_os = "windows")]
+fn default_baseline_path() -> PathBuf {
+    PathBuf::from(r"C:\ProgramData\Verinox\baseline.json")
+}
+#[cfg(target_os = "linux")]
+fn default_baseline_path() -> PathBuf {
+    PathBuf::from("/var/lib/verinox/baseline.json")
+}
+#[cfg(target_os = "macos")]
+fn default_baseline_path() -> PathBuf {
+    PathBuf::from("/Library/Application Support/Verinox/baseline.json")
+}
+
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Config {
     watch_patterns: Vec<String>,
@@ -67,6 +80,8 @@ pub struct Config {
     #[serde(default = "default_log_dir")]
     log_dir: PathBuf,
     max_log_size: bytesize::ByteSize,
+    #[serde(default = "default_baseline_path")]
+    baseline_path: PathBuf,
 }
 
 impl Config {
@@ -223,8 +238,9 @@ mod test {
             Config {
                 hash_algorithm: HashAlgorithm::Sha256,
                 watch_patterns,
-                log_dir: PathBuf::from("C:\\ProgramData\\Verinox\\logs".to_string()),
-                max_log_size: ByteSize::from_str("10MB").unwrap()
+                log_dir: PathBuf::from(r"C:\ProgramData\Verinox\logs"),
+                max_log_size: ByteSize::from_str("10MB").unwrap(),
+                baseline_path: PathBuf::from(r"C:\ProgramData\Verinox\baseline.json")
             },
             result.unwrap()
         );

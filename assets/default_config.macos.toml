@@ -13,3 +13,5 @@ watch_patterns = [
     '/Library/LaunchAgents/**', 
     '/Library/LaunchDaemons/**'
     ]
+# File used to track the last known hash of each watched file, so changes can be detected across restarts.
+baseline_path = "/Library/Application Support/Verinox/baseline.json"

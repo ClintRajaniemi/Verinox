@@ -29,30 +29,17 @@ pub enum BaselineError {
         path: PathBuf,
         source: std::io::Error,
     },
+
+    #[error("no parent directory at {path}")]
+    NoParentDirectory { path: PathBuf },
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Baseline {
+    // File path to tracked file.
     path: PathBuf,
+    // This HashMap contains the path of the tracked file and the file hash.
     entries: HashMap<PathBuf, String>,
-}
-
-pub fn load(path: &Path) -> Result<Baseline, BaselineError> {
-    if !path.exists() {
-        return Ok(Baseline {
-            path: path.to_path_buf(),
-            entries: HashMap::new(),
-        });
-    }
-    let contents = fs::read_to_string(path).map_err(|source| BaselineError::Read {
-        path: path.to_path_buf(),
-        source,
-    })?;
-    let entries: HashMap<PathBuf, String> = serde_json::from_str(&contents)?;
-    Ok(Baseline {
-        path: path.to_path_buf(),
-        entries,
-    })
 }
 
 #[derive(Debug)]
@@ -64,6 +51,26 @@ pub struct HashChange {
 }
 
 impl Baseline {
+    pub fn load(path: &Path) -> Result<Baseline, BaselineError> {
+        // Opens and reads the baseline file if it exists wh ich allows file hash tracking across runs.
+        // Returns a baseline object.
+        if !path.exists() {
+            return Ok(Baseline {
+                path: path.to_path_buf(),
+                entries: HashMap::new(),
+            });
+        }
+        let contents = fs::read_to_string(path).map_err(|source| BaselineError::Read {
+            path: path.to_path_buf(),
+            source,
+        })?;
+        let entries: HashMap<PathBuf, String> = serde_json::from_str(&contents)?;
+        Ok(Baseline {
+            path: path.to_path_buf(),
+            entries,
+        })
+    }
+
     pub fn process(
         &mut self,
         event: &WatchEvent,
@@ -138,13 +145,14 @@ impl Baseline {
 
     pub fn save(&self) -> Result<(), BaselineError> {
         let json_string = serde_json::to_string(&self.entries)?;
-        let path_parent = self.path.parent().ok_or_else(|| 0);
-        let path_parent = path_parent.map_err(|code| BaselineError::Write {
-            path: self.path.clone(),
-            source: std::io::Error::from_raw_os_error(code),
-        })?;
+        let path_parent = self
+            .path
+            .parent()
+            .ok_or_else(|| BaselineError::NoParentDirectory {
+                path: self.path.clone(),
+            })?;
         let mut dir_builder = fs::DirBuilder::new();
-        // Is it worth checking if the directory exists first? Does the below line rebuild the directory path if it already exists?
+        // No need to check existence of the path, with recursive(true) the create will not fail if the path exists.
         dir_builder
             .recursive(true)
             .create(path_parent)
@@ -153,8 +161,9 @@ impl Baseline {
                 source,
             })?;
 
-        let mut temp_path = self.path.to_path_buf();
-        temp_path.push(".tmp");
+        let mut file_name = self.path.file_name().unwrap_or_default().to_os_string();
+        file_name.push(".tmp");
+        let temp_path = self.path.with_file_name(file_name);
         // Write to baseline.json.tmp
         fs::write(temp_path.clone(), json_string).map_err(|source| BaselineError::Write {
             path: temp_path.to_path_buf(),
@@ -166,4 +175,25 @@ impl Baseline {
             source,
         })
     }
+}
+
+#[cfg(test)]
+#[test]
+fn load_missing_file_returns_empty_baseline() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("baseline.json");
+    let baseline = Baseline::load(&path).unwrap();
+    assert!(baseline.entries.is_empty());
+}
+
+#[test]
+fn load_existing_file_parses_entries() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("baseline.json");
+    fs::write(&path, r#"{"/etc/hosts": "sha256:abc123"}"#).unwrap();
+    let baseline = Baseline::load(&path).unwrap();
+    assert_eq!(
+        baseline.entries.get(Path::new("/etc/hosts")),
+        Some(&"sha256:abc123".to_string())
+    );
 }

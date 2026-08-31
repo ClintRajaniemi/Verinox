@@ -5,7 +5,7 @@ mod events;
 mod watcher;
 mod writer;
 
-pub use baseline::{Baseline, BaselineError, HashChange, load};
+pub use baseline::{Baseline, BaselineError, HashChange};
 pub use config::{Config, ConfigError, HashAlgorithm};
 pub use error::VerinoxError;
 pub use watcher::{ChangeKind, WatchEvent, Watcher, WatcherError};

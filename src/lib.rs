@@ -1,3 +1,6 @@
+//! # Verinox
+//! `Verinox` is an open source file integrity monitoring tool that works on Windows, Linux and macOS.
+
 mod baseline;
 mod config;
 mod error;
@@ -13,6 +16,7 @@ pub use watcher::{ChangeKind, WatchEvent, Watcher, WatcherError};
 use std::path::PathBuf;
 
 pub fn run(config_path: &PathBuf) -> Result<(), VerinoxError> {
+    // Checks that `config_path` exists or else it writes a default config at `config_path`
     Config::ensure_exists(config_path)?;
     let config = Config::load(config_path)?;
 
@@ -26,6 +30,7 @@ pub fn run(config_path: &PathBuf) -> Result<(), VerinoxError> {
     let watcher = Watcher::new(&patterns)?;
 
     for event in watcher.events.iter() {
+        // Remove this once Config::load, Baseline::load and Baseline::process are wired in.
         println!("{:?}: {}", event.kind, event.path.display());
         // TODO: replace with baseline.rs hash/diff + events.rs Event + writer.rs append, once those modules exist.
     }

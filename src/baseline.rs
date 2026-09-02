@@ -37,9 +37,9 @@ pub enum BaselineError {
 #[derive(Deserialize, Debug)]
 pub struct Baseline {
     // File path to tracked file.
-    path: PathBuf,
+    pub path: PathBuf,
     // This HashMap contains the path of the tracked file and the file hash.
-    entries: HashMap<PathBuf, String>,
+    pub entries: HashMap<PathBuf, String>,
 }
 
 #[derive(Debug)]
@@ -48,6 +48,7 @@ pub struct HashChange {
     pub kind: ChangeKind,
     pub previous_hash: Option<String>,
     pub new_hash: Option<String>,
+    pub file_size: Option<u64>,
 }
 
 impl Baseline {
@@ -89,6 +90,7 @@ impl Baseline {
                     kind: ChangeKind::Deleted,
                     previous_hash: Some(previous_hash),
                     new_hash: None,
+                    file_size: None,
                 }))
             }
             _ => {
@@ -138,6 +140,7 @@ impl Baseline {
                     kind,
                     previous_hash,
                     new_hash: Some(new_hash),
+                    file_size: Some(bytes.len() as u64),
                 }))
             }
         }

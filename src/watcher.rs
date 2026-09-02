@@ -5,6 +5,8 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 
+use serde::Serialize;
+
 pub struct Watcher {
     _inner: notify::RecommendedWatcher,
     pub events: mpsc::Receiver<WatchEvent>,
@@ -48,7 +50,7 @@ impl Watcher {
     }
 }
 
-fn translate_event(event: &notify::Event, patterns: &[glob::Pattern]) -> Vec<WatchEvent> {
+pub fn translate_event(event: &notify::Event, patterns: &[glob::Pattern]) -> Vec<WatchEvent> {
     let Some(kind) = map_kind(&event.kind) else {
         return Vec::new();
     };
@@ -75,7 +77,8 @@ pub enum WatcherError {
     },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum ChangeKind {
     Created,
     Modified,

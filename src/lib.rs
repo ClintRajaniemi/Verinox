@@ -28,11 +28,18 @@ pub fn run(config_path: &PathBuf) -> Result<(), VerinoxError> {
         .map_err(|source| ConfigError::GlobPattern { source })?;
 
     let watcher = Watcher::new(&patterns)?;
-
+    let mut baseline = Baseline::load(config.baseline_path())?;
     for event in watcher.events.iter() {
-        // Remove this once Config::load, Baseline::load and Baseline::process are wired in.
-        println!("{:?}: {}", event.kind, event.path.display());
-        // TODO: replace with baseline.rs hash/diff + events.rs Event + writer.rs append, once those modules exist.
+        let result = baseline.process(&event, config.hash_algorithm());
+        // Let's explicitely handle the Result/Err and Option so we don't break this loop on a single error.
+        match result {
+            // TODO: log this condition
+            Ok(Some(change)) => println!("{:?}", change),
+            // TODO: Log this condition
+            Ok(None) => println!("Nothing to do here."),
+            // TODO: Log this error
+            Err(e) => println!("{}", e),
+        }
     }
 
     Ok(())

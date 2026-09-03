@@ -11,6 +11,7 @@ mod writer;
 pub use baseline::{Baseline, BaselineError, HashChange};
 pub use config::{Config, ConfigError, HashAlgorithm};
 pub use error::VerinoxError;
+pub use events::Event;
 pub use watcher::{ChangeKind, WatchEvent, Watcher, WatcherError};
 
 use std::path::PathBuf;
@@ -29,12 +30,17 @@ pub fn run(config_path: &PathBuf) -> Result<(), VerinoxError> {
 
     let watcher = Watcher::new(&patterns)?;
     let mut baseline = Baseline::load(config.baseline_path())?;
+    // This loop runs until the channel is shutdown which is to say the entire time the process is running.
     for event in watcher.events.iter() {
         let result = baseline.process(&event, config.hash_algorithm());
         // Let's explicitely handle the Result/Err and Option so we don't break this loop on a single error.
         match result {
             // TODO: log this condition
-            Ok(Some(change)) => println!("{:?}", change),
+            Ok(Some(change)) => {
+                let event = Event::new(change);
+                // TODO: Process the event with a writer to write to file.
+                println!("{:?}", event);
+            },
             // TODO: Log this condition
             Ok(None) => println!("Nothing to do here."),
             // TODO: Log this error

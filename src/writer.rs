@@ -4,7 +4,7 @@ use crate::events::Event;
 use time::macros::format_description;
 
 use std::ffi::OsString;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -42,6 +42,56 @@ impl Writer {
     pub fn new(config: &Config) -> Result<Self, WriterError> {
         let file_counter: u64 = 1;
         let mut log_file_path = PathBuf::from(config.log_dir());
+        let (opened_file, full_path) = Writer::log_file_opener(&mut log_file_path, file_counter)?;
+
+        Ok(Writer {
+            log_directory: PathBuf::from(config.log_dir()),
+            rotation_threshold: config.max_log_size(),
+            opened_file: opened_file,
+            opened_file_path: full_path,
+            current_file_size: 0,
+            file_counter: file_counter,
+        })
+    }
+
+    pub fn write_event(&mut self, event: &Event) -> Result<(), WriterError> {
+        let mut serialized_event = serde_json::to_string(event)?;
+        // Need to account for the trailing '\n' char in current_file_size.
+        let length = serialized_event.len() as u64 + 1;
+        if length + self.current_file_size > self.rotation_threshold.as_u64() {
+            self.rotate_log_file(&mut self.log_directory.clone())?;
+        }
+        // The trailing '\n' we accounted for in the above length calculation.
+        serialized_event.push('\n');
+        self.opened_file
+            .write_all(serialized_event.as_bytes())
+            .map_err(|source| WriterError::Write {
+                path: self.opened_file_path.clone(),
+                source,
+            })?;
+        self.current_file_size += length;
+
+        Ok(())
+    }
+
+    fn rotate_log_file(&mut self, path: &PathBuf) -> Result<(), WriterError> {
+        self.file_counter += 1;
+        let mut log_file_path = PathBuf::from(path);
+        let (file, full_path) = Writer::log_file_opener(&mut log_file_path, self.file_counter)?;
+        self.opened_file = file;
+        self.opened_file_path = full_path;
+        self.current_file_size = 0;
+        // Now that we have a successful file write, we can reset the file_counter to 0.
+        self.file_counter = 0;
+
+        Ok(())
+    }
+
+    fn log_file_opener(
+        log_file_path: &mut PathBuf,
+        file_counter: u64,
+    ) -> Result<(File, PathBuf), WriterError> {
+        // Build the full log path filename
         let format =
             format_description!("[year]-[month]-[day]_[hour]-[minute]-[second]").to_owned();
         let now = time::OffsetDateTime::now_utc();
@@ -50,41 +100,21 @@ impl Writer {
             .map_err(|source| WriterError::Time { source })?
             .into();
         log_file_name.push("_");
+        // We use file_counter in the name to prevent naming collisions
         log_file_name.push(file_counter.to_string());
         log_file_name.push(".log");
         log_file_path.push(log_file_name);
-        let opened_file = File::create(&log_file_path).map_err(|source| WriterError::Create {
-            path: log_file_path.clone(),
-            source,
-        })?;
 
-        Ok(Writer {
-            log_directory: PathBuf::from(config.log_dir()),
-            rotation_threshold: config.max_log_size(),
-            opened_file: opened_file,
-            opened_file_path: log_file_path,
-            current_file_size: 0,
-            file_counter: file_counter,
-        })
-    }
-
-    pub fn write_event(&mut self, event: &Event) -> Result<(), WriterError> {
-        let mut serialized_event = serde_json::to_string(&event)?;
-        // Need to account for the '\n' char in current_file_size.
-        let length = serialized_event.len() as u64 + 1;
-        if length + self.current_file_size >= self.rotation_threshold.as_u64() {
-            //TODO: Log file has reached rotation_threshold. Rotate the log file.
-            //self.rotate();
-        }
-        serialized_event.push('\n');
-        self.opened_file
-            .write(serialized_event.as_bytes())
-            .map_err(|source| WriterError::Write {
-                path: self.log_directory.clone(),
+        let opened_file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            // Fail if the filename exists.
+            .open(log_file_path.clone())
+            .map_err(|source| WriterError::Create {
+                path: log_file_path.clone(),
                 source,
             })?;
-        self.current_file_size += length;
 
-        Ok(())
+        Ok((opened_file, log_file_path.to_path_buf()))
     }
 }

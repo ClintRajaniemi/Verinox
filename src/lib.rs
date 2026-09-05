@@ -13,6 +13,7 @@ pub use config::{Config, ConfigError, HashAlgorithm};
 pub use error::VerinoxError;
 pub use events::Event;
 pub use watcher::{ChangeKind, WatchEvent, Watcher, WatcherError};
+pub use writer::{Writer, WriterError};
 
 use std::path::PathBuf;
 
@@ -40,7 +41,7 @@ pub fn run(config_path: &PathBuf) -> Result<(), VerinoxError> {
                 let event = Event::new(change);
                 // TODO: Process the event with a writer to write to file.
                 println!("{:?}", event);
-            },
+            }
             // TODO: Log this condition
             Ok(None) => println!("Nothing to do here."),
             // TODO: Log this error

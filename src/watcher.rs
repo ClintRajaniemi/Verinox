@@ -122,7 +122,7 @@ mod test {
         let path = watch_root("C:\\Windows\\System32\\Tasks\\**");
         assert_eq!("C:\\Windows\\System32\\Tasks", path.to_string_lossy());
     }
-    #[cfg(not (target_os = "windows"))]
+    #[cfg(not(target_os = "windows"))]
     #[test]
     fn test_watch_root_not_windows() {
         let path = watch_root("C:\\Windows\\System32\\Tasks\\**");

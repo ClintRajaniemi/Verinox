@@ -36,7 +36,7 @@ jobs:
         run: cargo clippy --all-targets --all-features --locked -- -D warnings
 
       - name: Test
-        run: cargo test --all-features --locked
+        run: cargo test --all-features --lib --locked
 
   audit:
     name: Security Audit

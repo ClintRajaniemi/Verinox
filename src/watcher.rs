@@ -125,8 +125,8 @@ mod test {
     #[cfg(not(target_os = "windows"))]
     #[test]
     fn test_watch_root_not_windows() {
-        let path = watch_root("C:\\Windows\\System32\\Tasks\\**");
-        assert_eq!("C:\\Windows\\System32\\Tasks", path.to_string_lossy());
+        let path = watch_root("/etc/cron.d/**");
+        assert_eq!("/etc/cron.d/", path.to_string_lossy());
     }
     #[test]
     fn test_map_kind() {

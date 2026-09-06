@@ -1,4 +1,3 @@
-use const_hex;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -93,7 +92,7 @@ impl Config {
     }
 
     pub fn load(path: &PathBuf) -> Result<Config, ConfigError> {
-        let toml_config = fs::read_to_string(&path).map_err(|source| ConfigError::Read {
+        let toml_config = fs::read_to_string(path).map_err(|source| ConfigError::Read {
             path: path.clone(),
             source,
         })?;
@@ -102,7 +101,7 @@ impl Config {
 
         for glob in &config.watch_patterns {
             let _result =
-                glob::Pattern::new(&glob).map_err(|source| ConfigError::GlobPattern { source })?;
+                glob::Pattern::new(glob).map_err(|source| ConfigError::GlobPattern { source })?;
         }
 
         Ok(config)

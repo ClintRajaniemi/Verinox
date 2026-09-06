@@ -3,7 +3,6 @@ use crate::{ChangeKind, HashChange};
 use std::path::PathBuf;
 
 use serde::Serialize;
-use time;
 
 #[derive(Debug, Serialize)]
 pub struct Event {

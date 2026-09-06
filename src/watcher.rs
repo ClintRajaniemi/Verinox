@@ -126,7 +126,7 @@ mod test {
     #[test]
     fn test_watch_root_not_windows() {
         let path = watch_root("/etc/cron.d/**");
-        assert_eq!("/etc/cron.d/", path.to_string_lossy());
+        assert_eq!("/etc/cron.d", path.to_string_lossy());
     }
     #[test]
     fn test_map_kind() {

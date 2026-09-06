@@ -211,8 +211,9 @@ mod test {
         let _result = Config::ensure_exists(&path);
         assert!(path.exists());
     }
+    #[cfg(target_os = "windows")]
     #[test]
-    fn test_load_config_exists() {
+    fn test_load_config_exists_windows() {
         let path = PathBuf::from("assets/default_config.windows.toml");
         let result = Config::load(&path);
         let watch_patterns: Vec<String> = vec![
@@ -231,6 +232,34 @@ mod test {
                 log_dir: PathBuf::from(r"C:\ProgramData\Verinox\logs"),
                 max_log_size: ByteSize::from_str("10MB").unwrap(),
                 baseline_path: PathBuf::from(r"C:\ProgramData\Verinox\baseline.json")
+            },
+            result.unwrap()
+        );
+    }
+    #[cfg(not(target_os = "windows"))]
+    #[test]
+    fn test_load_config_exists_not_windows() {
+        let path = PathBuf::from("assets/default_config.linux.toml");
+        let result = Config::load(&path);
+        let watch_patterns: Vec<String> = vec![
+            "/etc/passwd".to_string(),
+            "/etc/shadow".to_string(),
+            "/etc/sudoers".to_string(),
+            "/etc/sudoers.d/**".to_string(),
+            "/etc/hosts".to_string(),
+            "/etc/ssh/sshd_config".to_string(),
+            "/etc/crontab".to_string(),
+            "/etc/cron.d/**".to_string(),
+            "/etc/systemd/system/**".to_string(),
+            "/etc/ld.so.preload".to_string(),
+        ];
+        assert_eq!(
+            Config {
+                hash_algorithm: HashAlgorithm::Sha256,
+                watch_patterns,
+                log_dir: PathBuf::from("/var/log/verinox"),
+                max_log_size: ByteSize::from_str("10MB").unwrap(),
+                baseline_path: PathBuf::from("/var/lib/verinox/baseline.json")
             },
             result.unwrap()
         );

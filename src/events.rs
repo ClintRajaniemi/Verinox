@@ -13,7 +13,7 @@ pub struct Event {
     pub file_hash: Option<String>,
     pub previous_hash: Option<String>,
     pub file_size: Option<u64>,
-    pub dest: String,
+    pub hostname: String,
 }
 
 impl Event {
@@ -25,7 +25,7 @@ impl Event {
             file_hash: change.new_hash,
             file_path: change.path,
             file_size: change.file_size,
-            dest: gethostname::gethostname().to_string_lossy().into_owned(),
+            hostname: gethostname::gethostname().to_string_lossy().into_owned(),
         }
     }
 }

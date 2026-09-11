@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub struct Watcher {
     _inner: notify::RecommendedWatcher,
@@ -77,7 +77,7 @@ pub enum WatcherError {
     },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ChangeKind {
     Created,
@@ -113,7 +113,7 @@ fn map_kind(kind: &notify::EventKind) -> Option<ChangeKind> {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
 
     #[cfg(target_os = "windows")]

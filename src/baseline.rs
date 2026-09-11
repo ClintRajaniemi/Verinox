@@ -181,22 +181,31 @@ impl Baseline {
 }
 
 #[cfg(test)]
-#[test]
-fn load_missing_file_returns_empty_baseline() {
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("baseline.json");
-    let baseline = Baseline::load(&path).unwrap();
-    assert!(baseline.entries.is_empty());
-}
+mod tests {
 
-#[test]
-fn load_existing_file_parses_entries() {
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("baseline.json");
-    fs::write(&path, r#"{"/etc/hosts": "sha256:abc123"}"#).unwrap();
-    let baseline = Baseline::load(&path).unwrap();
-    assert_eq!(
-        baseline.entries.get(Path::new("/etc/hosts")),
-        Some(&"sha256:abc123".to_string())
-    );
+    use std::path::Path;
+
+    use std::fs::write;
+
+    use crate::baseline::Baseline;
+
+    #[test]
+    fn load_missing_file_returns_empty_baseline() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("baseline.json");
+        let baseline = Baseline::load(&path).unwrap();
+        assert!(baseline.entries.is_empty());
+    }
+
+    #[test]
+    fn load_existing_file_parses_entries() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("baseline.json");
+        write(&path, r#"{"/etc/hosts": "sha256:abc123"}"#).unwrap();
+        let baseline = Baseline::load(&path).unwrap();
+        assert_eq!(
+            baseline.entries.get(Path::new("/etc/hosts")),
+            Some(&"sha256:abc123".to_string())
+        );
+    }
 }

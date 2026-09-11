@@ -1,7 +1,8 @@
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
-use std::fs;
+use tempfile::TempDir;
 
+use std::fs;
 use std::path::{Path, PathBuf};
 
 #[derive(thiserror::Error, Debug)]
@@ -126,6 +127,30 @@ impl Config {
     pub fn baseline_path(&self) -> &PathBuf {
         &self.baseline_path
     }
+
+    // Used by unit tests in writer.rs
+    pub fn build_test_config(dir: TempDir) -> Result<Config, ConfigError> {
+        let log_dir = dir.path();
+        let log_dir_string = log_dir.to_string_lossy().into_owned();
+
+        let config_path = dir.path().join("test_config.toml");
+
+        let baseline_path = dir.path().join("baseline.json");
+        let baseline_path_string = baseline_path.to_string_lossy().into_owned();
+
+        let toml_str = format!(
+            r#"hash_algorithm = 'sha256'
+log_dir = '{log_dir_string}'
+max_log_size = '50B'
+watch_patterns = []
+baseline_path = '{baseline_path_string}'
+"#
+        );
+
+        std::fs::write(&config_path, toml_str).unwrap();
+
+        Config::load(&config_path)
+    }
 }
 
 #[cfg(target_os = "windows")]
@@ -184,7 +209,7 @@ watch_patterns = [
     ]"#;
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
     use bytesize::ByteSize;
 

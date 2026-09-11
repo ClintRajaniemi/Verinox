@@ -2,9 +2,9 @@ use crate::{ChangeKind, HashChange};
 
 use std::path::PathBuf;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct Event {
     #[serde(with = "time::serde::rfc3339")]
     pub time: time::OffsetDateTime,

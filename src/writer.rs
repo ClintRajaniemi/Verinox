@@ -136,76 +136,66 @@ impl Writer {
 }
 
 #[cfg(test)]
-use regex::Regex;
+mod tests {
+    use regex::Regex;
 
-#[test]
-fn create_file() {
-    let dir = tempfile::tempdir().unwrap();
+    use std::fs::File;
+    use std::path::PathBuf;
 
-    let log_dir = dir.path();
-    let log_dir_string = log_dir.to_string_lossy().to_owned();
+    use crate::config::Config;
+    use crate::writer::Writer;
 
-    let config_path = dir.path().join("test_config.toml");
+    #[test]
+    fn create_file() {
+        let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let config: Config = Config::build_test_config(dir).unwrap();
+        let writer: Writer = Writer::new(&config).unwrap();
 
-    let baseline_path = dir.path().join("baseline.json");
-    let baseline_path_string = baseline_path.to_string_lossy().to_owned();
+        // Regex to match filename in a string such as: 2026-09-07_08-55-20_1.log
+        let is_matched: bool = Regex::new(r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_1\.log")
+            .unwrap()
+            .is_match(writer.opened_file_path.to_str().unwrap());
+        assert!(is_matched);
+    }
 
-    let toml_str = format!(
-        r#"hash_algorithm = 'sha256'
-log_dir = '{log_dir_string}'
-max_log_size = '50B'
-watch_patterns = []
-baseline_path = '{baseline_path_string}'
-"#
-    );
+    #[test]
+    fn event_writes_successfully() {
+        use std::io::{BufRead, BufReader};
 
-    std::fs::write(&config_path, toml_str).unwrap();
+        use crate::events::Event;
+        use crate::watcher::ChangeKind;
 
-    let config = Config::load(&config_path).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let config = Config::build_test_config(dir).unwrap();
 
-    let writer = Writer::new(&config).unwrap();
+        let event1 = Event {
+            time: time::OffsetDateTime::now_utc(),
+            action: ChangeKind::Created,
+            file_path: PathBuf::from("/tmp/file.txt"),
+            file_hash: Some(String::from(
+                "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            )),
+            previous_hash: Some(String::from(
+                "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592",
+            )),
+            file_size: Some(1024),
+            hostname: gethostname::gethostname().to_string_lossy().into_owned(),
+        };
 
-    // Regex to match filename in a string such as: 2026-09-07_08-55-20_1.log
-    let is_matched = Regex::new(r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_1\.log")
-        .unwrap()
-        .is_match(writer.opened_file_path.to_str().unwrap());
-    assert!(is_matched);
+        let mut writer = Writer::new(&config).unwrap();
+        let _ = writer.write_event(&event1);
+
+        // Reopen and parse the json lines to ensure the logs are properly formatted.
+        let mut log_path: PathBuf = PathBuf::from(config.log_dir());
+        // TODO: Fix this as this is the config file and not the log file.
+        // Probably will need a regex to match the filename of the actual log file.
+        log_path.push("test_config.toml");
+        let file: File = File::open(log_path).unwrap();
+        let reader: BufReader<File> = BufReader::new(file);
+
+        let json_line: String = reader.lines().next().unwrap().unwrap();
+        let event_entry: Event = serde_json::from_str(&json_line).unwrap();
+
+        assert_eq!(event1, event_entry);
+    }
 }
-
-// fn event_writes_successfully() {
-//     let dir = tempfile::tempdir().unwrap();
-//     let mut path: PathBuf = dir.path().to_path_buf();
-//     path.push("default_config.linux.toml");
-//     Config::ensure_exists(&path).unwrap();
-//     let config = Config::load(&path).unwrap();
-
-//     let event1 = Event {
-//         time: time::OffsetDateTime::now_utc(),
-//         action: ChangeKind::Created,
-//         file_path: PathBuf::from("/tmp/file.txt"),
-//         file_hash: Some(String::from(
-//             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-//         )),
-//         previous_hash: Some(String::from(
-//             "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592",
-//         )),
-//         file_size: Some(1024),
-//         hostname: gethostname::gethostname().to_string_lossy().into_owned(),
-//     };
-
-//     let event2 = Event {
-//         time: time::OffsetDateTime::now_utc(),
-//         action: ChangeKind::Modified,
-//         file_path: PathBuf::from("/tmp/file2.txt"),
-//         file_hash: Some(String::from("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")),
-//         previous_hash: Some(String::from("248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1")),
-//         file_size: Some(285),
-//         hostname: gethostname::gethostname().to_string_lossy().into_owned(),
-//     };
-//     let mut writer = Writer::new(&config).unwrap();
-//     let _ = writer.write_event(&event1);
-//     let _ = writer.write_event(&event2);
-
-//     // Reopen and parse the json lines to ensure the logs are properly formatted.
-
-// }

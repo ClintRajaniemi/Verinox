@@ -30,10 +30,13 @@ pub enum WriterError {
 
 pub struct Writer {
     log_directory: PathBuf,
-    // file size before the file is rotated
+    // // Maximum log file size (configurable)
     rotation_threshold: bytesize::ByteSize,
+    // Log file
     opened_file: std::fs::File,
+    // Log file path
     opened_file_path: PathBuf,
+    // Log file size
     current_file_size: u64,
     // Prevent filename collisions with a counter each time a file is opened.
     file_counter: u64,
@@ -148,7 +151,7 @@ mod tests {
     #[test]
     fn create_file() {
         let dir: tempfile::TempDir = tempfile::tempdir().unwrap();
-        let config: Config = Config::build_test_config(dir).unwrap();
+        let config: Config = Config::build_test_config(&dir, &[]).unwrap();
         let writer: Writer = Writer::new(&config).unwrap();
 
         // Regex to match filename in a string such as: 2026-09-07_08-55-20_1.log
@@ -166,7 +169,7 @@ mod tests {
         use crate::watcher::ChangeKind;
 
         let dir = tempfile::tempdir().unwrap();
-        let config = Config::build_test_config(dir).unwrap();
+        let config = Config::build_test_config(&dir, &[]).unwrap();
 
         let event1 = Event {
             time: time::OffsetDateTime::now_utc(),
@@ -186,10 +189,7 @@ mod tests {
         let _ = writer.write_event(&event1);
 
         // Reopen and parse the json lines to ensure the logs are properly formatted.
-        let mut log_path: PathBuf = PathBuf::from(config.log_dir());
-        // TODO: Fix this as this is the config file and not the log file.
-        // Probably will need a regex to match the filename of the actual log file.
-        log_path.push("test_config.toml");
+        let log_path = writer.opened_file_path;
         let file: File = File::open(log_path).unwrap();
         let reader: BufReader<File> = BufReader::new(file);
 

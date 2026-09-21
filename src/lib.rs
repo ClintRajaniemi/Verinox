@@ -33,19 +33,19 @@ pub fn run(config_path: &PathBuf) -> Result<(), VerinoxError> {
     let mut baseline = Baseline::load(config.baseline_path())?;
     let mut writer = Writer::new(&config)?;
     // This loop runs until the channel is shutdown which is to say the entire time the process is running.
-    for event in watcher.events.iter() {
-        let result = baseline.process(&event, config.hash_algorithm());
+    for watch_event in watcher.events.iter() {
+        let result = baseline.process(&watch_event, config.hash_algorithm());
         // Let's explicitely handle the Result/Err and Option so we don't break this loop on a single error.
         match result {
             // With a change identified, write it to the log_file.
             Ok(Some(change)) => {
-                let event = Event::new(change);
-                writer.write_event(&event)?;
+                let watch_event = Event::new(change);
+                writer.write_event(&watch_event)?;
             }
             // Nothing to do with this as no change occurred.
             Ok(None) => (),
             // TODO: Log this error
-            Err(e) => println!("{}", e),
+            Err(e) => eprintln!("{}", e),
         }
     }
 

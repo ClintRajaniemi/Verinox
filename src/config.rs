@@ -129,9 +129,18 @@ impl Config {
     }
 
     // Used by unit tests in writer.rs
-    pub fn build_test_config(dir: TempDir) -> Result<Config, ConfigError> {
-        let log_dir = dir.path();
+    pub fn build_test_config(
+        dir: &TempDir,
+        watch_pattern_path: &[&str],
+    ) -> Result<Config, ConfigError> {
+        let log_dir = dir.path().join("logs");
         let log_dir_string = log_dir.to_string_lossy().into_owned();
+
+        let watch_dir = watch_pattern_path.iter().next();
+        let watch_dir = match watch_dir {
+            Some(watch_dir) => watch_dir,
+            None => "",
+        };
 
         let config_path = dir.path().join("test_config.toml");
 
@@ -142,7 +151,7 @@ impl Config {
             r#"hash_algorithm = 'sha256'
 log_dir = '{log_dir_string}'
 max_log_size = '50B'
-watch_patterns = []
+watch_patterns = ['{watch_dir}']
 baseline_path = '{baseline_path_string}'
 "#
         );

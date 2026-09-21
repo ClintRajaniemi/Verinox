@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 pub struct Watcher {
     _inner: notify::RecommendedWatcher,
+    // File change events
     pub events: mpsc::Receiver<WatchEvent>,
 }
 
@@ -93,6 +94,7 @@ pub struct WatchEvent {
 
 fn watch_root(pattern: &str) -> PathBuf {
     let mut root = PathBuf::new();
+    // The globbing patterns just show us that the parent path is the important part, so only keep the parent path.
     for component in Path::new(pattern).components() {
         let s = component.as_os_str().to_string_lossy();
         if s.contains('*') || s.contains('?') || s.contains('[') {
